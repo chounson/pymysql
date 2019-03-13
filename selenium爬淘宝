@@ -9,10 +9,10 @@ import re
 from bs4 import BeautifulSoup
 import pymongo
 
-KEY='没事'
+KEY='胡椒'
 
 b=webdriver.Chrome()
-wait=WebDriverWait(b,5)
+wait=WebDriverWait(b,20)
 
 def save_info(info):
     print(info)
@@ -29,10 +29,12 @@ def get_search():
     button=wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR,'#J_TSearchForm > div.search-button > button')))
     input.send_keys(KEY)
     button.click()
-    wait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR,'#mainsrp-pager > div > div > div > ul > li.item.active'),'1'))
+    time.sleep(1)
+    wait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR,'#mainsrp-pager > div > div > div > ul > li.item.active > span'),'1'))
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'#mainsrp-itemlist > div > div > div:nth-of-type(1) > div')))
     get_info(b.page_source)
-    page=int(re.search(r'(\d+)',page).group(1))
+    pagee=wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, '#mainsrp-pager > div > div > div > div.total'))).text
+    page=int(re.search(r'(\d+)',pagee).group(1))
     return page
 
 def get_info(html):
@@ -42,17 +44,18 @@ def get_info(html):
         info={
             'price':result.select('.price strong')[0].get_text(),
             'name':result.select('.title > a')[0].get_text().strip(),
-            'shop':result.select('.shop > a')[0].get_text(),
-            'href':reuslt.select('.pic > a')[0].attrs['href']
+            'shop':result.select('.shop > a')[0].get_text().strip(),
+            'href':result.select('.pic > a')[0].attrs['href']
         }
         save_info(info)
 
 def get_next(page):
     input=wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'#mainsrp-pager > div > div > div > div.form > input')))
-    button=wait.unti(EC.element_to_be_clickable((By.CSS_SELECTOR,'#mainsrp-pager > div > div > div > div.form > span.btn.J_Submit')))
+    button=wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR,'#mainsrp-pager > div > div > div > div.form > span.btn.J_Submit')))
     input.clear()
     input.send_keys(page)
     button.click()
+    time.sleep(1)
     wait.until(EC.text_to_be_present_in_element((By.CSS_SELECTOR,'#mainsrp-pager > div > div > div > ul > li.item.active > span'), str(page)))
     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR,'#mainsrp-itemlist > div > div > div:nth-of-type(1) > div')))
     get_info(b.page_source)
@@ -67,4 +70,5 @@ def main():
     time.sleep(3)
     b.close()
 
-main()
+if __name__=='__main__':
+    main()
