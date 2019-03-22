@@ -1,0 +1,43 @@
+#coding=utf-8
+import jieba
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+plt.rcParams['font.sans-serif'] = 'Simhei'
+
+def get_stopword():
+    all=[]
+    with open('/home/zelin/ddd/中文停用词库.txt','r',encoding='gb18030') as f:
+#     stopword=pd.read_csv('/home/zelin/ddd/中文停用词库.txt')
+        stopword=f.readlines()
+    for line in stopword:
+        all.append(line.strip())
+    return all
+
+def get_fenci(words):
+    word_gen=jieba.cut(words)
+    stopword=get_stopword()
+    useless=['~']
+    words=[]
+    for word in word_gen:
+        word=word.strip()
+        if word != '' and word not in stopword:
+            words.append(word)
+    words=pd.DataFrame(words)
+#     words.to_csv('/home/zelin/ddd/idolt.csv')
+#     to_csv('/home/zelin/ddd/fenge.csv')
+#     print(words.unstack().head())
+#     print(words)
+    
+
+def main():
+    data=pd.read_csv('/home/zelin/ddd/bradata.csv',encoding='gb18030')
+#     print(data.info())
+    data['word']=data['content'].apply(get_fenci)
+    print(data['word'])
+#     print(data.info())
+
+
+if __name__=='__main__':
+    main()
