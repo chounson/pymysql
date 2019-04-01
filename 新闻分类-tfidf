@@ -1,0 +1,38 @@
+import pickle
+import os
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.datasets.base import Bunch
+
+word_level='./word-level-sort/train.jieba.bat'
+word_tfidf='./word-level-sort/train.tfidf.bat'
+
+def _read_file(filepath):
+    with open(filepath,'rb') as f:
+        bunch=pickle.load(f)
+    return bunch
+
+def _write_file(filepath,bunch):
+    with open(filepath,'wb') as f:
+        pickle.dump(bunch,f)
+
+def get_stop_word(filepath='./中文停用词库.txt'):
+    stop_words=[]
+    for line in open(filepath,'r',encoding='gb18030'):
+        stop_words.append(line.strip())
+    return stop_words
+
+def gen_tfidf(inputfile,output):
+    bunch = _read_file(inputfile)
+    tfidf_bunch=Bunch(category_labels={},labels=[],tfidf=[],vocabulary={})
+    tfidf_bunch.category_labels=bunch.category_label
+    tfidf_bunch.labels=bunch.labels
+    stop_words=get_stop_word()
+    tfidf=TfidfVectorizer(stop_words=stop_words,sublinear_tf=True,max_df=0.75,min_df=0.1)
+    tfidf_bunch.tfidf=tfidf.fit_transform(bunch.contents)
+    tfidf_bunch.vocabulary=tfidf.vocabulary_
+    print(tfidf_bunch.labels[-2:])
+
+    _write_file(output,tfidf_bunch)
+
+gen_tfidf(word_level,word_tfidf)
+
