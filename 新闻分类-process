@@ -1,0 +1,75 @@
+import os
+import jieba
+import pickle
+from sklearn.datasets.base import Bunch
+
+train_file = './char-level/cnews.train.txt'
+test_file='./char-level/cnews.test.txt'
+val_file='./char-level/cnews.val.txt'
+category_file='./char-level/cnews.category.txt'
+
+new_file='./word-level-sort/'
+word_level_file='./word-level-sort/train.jieba.bat'
+
+if not os.path.exists(new_file):
+    os.mkdir(new_file)
+
+class Categories:
+    def __init__(self,path_file):
+        self.category_label={}
+        for line in open(path_file,'r',encoding='utf-8'):
+            category,label=line.strip().split('\t')
+            self.category_label[category]=label
+        print(self.category_label.keys())
+
+    def category_to_label(self,category):
+        return self.category_label[category]
+
+    def label_to_category(self,label):
+        i=list(self.category_label.keys())[list(self.category_label.values()).index(label)]
+        return i
+
+# c=Categories(category_file)
+# print(c.category_to_label('体育'))
+# print(c.label_to_category('1'))
+# print(c.category_label.items())
+
+
+# with open(test_file,'r') as f:
+#     ff=f.readlines()
+#     for i in ff:
+#         print(i.split()[2])
+
+
+def gen_word(inputfilelist,outputfilelist):
+    bunch=Bunch(category_file={},labels=[],contents=[])
+    categories=Categories(category_file)
+    bunch.category_label=categories.category_label
+    for inputfile in inputfilelist:
+        print('开始处理'+inputfile)
+        i=0
+        with open(inputfile,'r',encoding='utf-8') as f:
+            lines=f.readlines()
+            for line in lines:
+                words=''
+                category,content=line.strip().split('\t')
+                label=categories.category_to_label(category)
+                bunch.labels.append(label)
+                print('cate,label:', category + ' ' + bunch.labels[-1]+ ' ' + str(i))
+                word_list=jieba.cut(content.strip())
+                for word in word_list:
+                    word=word.strip()
+                    if word !='':
+                        words +=word+' '
+                bunch.contents.append(words.strip())
+                i+=1
+            print(i)
+    with open(outputfilelist,'wb') as fout:
+        pickle.dump(bunch,fout)
+
+gen_word([train_file,val_file,test_file],word_level_file)
+
+with open(word_level_file,'rb') as f:
+    p=pickle.load(f)
+    print(p.labels[-3:])
+    print(p.contents[-3:])
